@@ -696,11 +696,22 @@ document.getElementById('pasteForm').addEventListener('submit', async function(e
       window.location.hash = `#/paste/${newPaste.alias || newPaste.id}`;
       showToast("Snippet published successfully!");
     } else {
-      const errData = await res.json();
-      alert(errData.error || "Failed to publish snippet.");
+      let errMsg = "Failed to publish snippet.";
+      try {
+        const errData = await res.json();
+        errMsg = errData.error || errMsg;
+      } catch (jsonErr) {
+        // Fallback if server returned raw text or HTML error
+        try {
+          const rawText = await res.text();
+          if (rawText) errMsg = rawText.substring(0, 100);
+        } catch (txtErr) {}
+      }
+      alert(errMsg);
     }
   } catch (e) {
-    alert("Connection to backend server lost.");
+    console.error("Create paste fetch error:", e);
+    alert("Connection to backend server lost. Please check console (F12) for details.");
   }
 });
 
