@@ -315,10 +315,12 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
 
 if __name__ == '__main__':
     init_db()
-    # Bind to localhost (127.0.0.1) explicitly to prevent Windows IPv6 loopback failures
-    server_address = ('127.0.0.1', 8080)
+    # Read port from Render's environment variable, default to 8080 for local dev
+    port = int(os.environ.get('PORT', 8080))
+    # Bind to 0.0.0.0 (all interfaces) so Render's load balancer can route traffic to it
+    server_address = ('0.0.0.0', port)
     httpd = http.server.HTTPServer(server_address, APIRoutingHandler)
-    print("Serving FoxBin API and frontend on http://127.0.0.1:8080 ...")
+    print(f"Serving FoxBin API and frontend on port {port}...")
     sys.stdout.flush()
     try:
         httpd.serve_forever()
