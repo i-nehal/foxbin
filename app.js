@@ -7,7 +7,7 @@ const ADMIN_TOKEN_KEY = 'foxbin_admin_token';
 const MY_PASTES_KEY = 'foxbin_my_pastes'; // Track pastes created by this browser locally for editing permissions
 
 // Base URL helper for API calls
-const API_BASE = window.location.origin;
+const API_BASE = 'https://foxbin.onrender.com';
 
 // Get Auth Token
 function getAdminToken() {
