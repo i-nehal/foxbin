@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <!-- Primary SEO Meta Tags -->
+  <title id="pageTitle">FoxBin.dev — Professional Code & Text Sharing Platform</title>
+  <meta id="pageMetaDesc" name="description" content="Share code snippets, formatted text, and notes instantly. Includes syntax highlighting, secure SQLite storage, custom aliases, and raw API access.">
+  <meta name="keywords" content="pastebin, code share, share code, syntax highlighting, developer tools, text share, copy paste, code repository">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" id="canonicalTag" href="http://127.0.0.1:8080/#/new">
+
+  <!-- Open Graph / Facebook SEO -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" id="ogUrl" content="http://127.0.0.1:8080/#/new">
+  <meta property="og:title" id="ogTitle" content="FoxBin.dev — Professional Code Sharing Platform">
+  <meta property="og:description" id="ogDesc" content="Share code snippets, formatted text, and notes instantly. Supports syntax highlighting, custom aliases, and raw API access.">
+  <meta property="og:image" content="https://images.unsplash.com/photo-1618401471353-b98aedd07871?q=80&w=600&auto=format&fit=crop">
+
+  <!-- Twitter SEO -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" id="twitterUrl" content="http://127.0.0.1:8080/#/new">
+  <meta property="twitter:title" id="twitterTitle" content="FoxBin.dev — Professional Code Sharing Platform">
+  <meta property="twitter:description" id="twitterDesc" content="Share code snippets, formatted text, and notes instantly. Supports syntax highlighting, custom aliases, and raw API access.">
+  <meta property="twitter:image" content="https://images.unsplash.com/photo-1618401471353-b98aedd07871?q=80&w=600&auto=format&fit=crop">
+
+  <!-- Typography Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- CSS Stylesheet -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- Highlight.js for Syntax Highlighting (Dark Theme) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/styles/github-dark.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.8.0/highlight.min.js"></script>
+</head>
+<body>
+  <!-- Header / Navigation Bar -->
+  <nav class="top-nav">
+    <div class="nav-container">
+      <a href="#/new" class="brand-logo" id="brandLogo">
+        <svg class="fox-icon" viewBox="0 0 100 100" width="36" height="36">
+          <polygon points="15,20 45,45 25,60" fill="#cc785c" />
+          <polygon points="85,20 55,45 75,60" fill="#cc785c" />
+          <polygon points="50,85 25,60 75,60" fill="#cc785c" />
+          <polygon points="50,85 45,78 55,78" fill="#141413" />
+          <polygon points="50,60 40,40 50,30 60,40" fill="#141413" />
+          <circle cx="38" cy="58" r="3.5" fill="#faf9f5" />
+          <circle cx="62" cy="58" r="3.5" fill="#faf9f5" />
+        </svg>
+        <span class="brand-text">FoxBin<span class="domain">.dev</span></span>
+      </a>
+
+      <!-- Quick Retrieval Search Form -->
+      <div class="quick-retrieve-form">
+        <input type="text" id="quickCodeInput" class="text-input quick-input" placeholder="Enter paste code/alias..." autocomplete="off">
+        <button id="quickCodeBtn" class="btn btn-secondary quick-btn">Get</button>
+      </div>
+      
+      <div class="nav-actions">
+        <a href="#/new" class="nav-link button-text-link" id="navNewBtn">New Paste</a>
+        <a href="#/pastes" class="nav-link button-text-link" id="navPastesBtn">Library</a>
+        <a href="#/docs" class="nav-link button-text-link" id="navDocsBtn">API Docs</a>
+        <!-- Dashboard is hidden for users by default, toggled by login state -->
+        <a href="#/admin" class="nav-link button-text-link" id="navAdminBtn" style="display: none;">Dashboard</a>
+        <a href="#/new" class="btn btn-primary" id="headerNewPasteBtn">Create Paste</a>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Dynamic Ad Placer Top Banner -->
+  <div class="ad-banner-wrapper" id="topAdBanner" style="display: none;">
+    <!-- Managed by javascript -->
+  </div>
+
+  <!-- Main Workspace -->
+  <main class="main-content">
+    <div class="content-container">
+
+      <!-- CREATE PASTE VIEW -->
+      <section id="createView" class="view-section active">
+        <div class="hero-header">
+          <h1 class="display-lg">Share what you're thinking.</h1>
+          <p class="lead-text">Paste code, prose, or snippets. Beautifully styled, readable, and instant.</p>
+        </div>
+
+        <form id="pasteForm" class="paste-form">
+          <div class="editor-container">
+            <div class="editor-header">
+              <span class="editor-title-tag">New Snippet</span>
+              <div class="editor-status-dot"></div>
+            </div>
+            <textarea id="pasteCode" class="paste-textarea" placeholder="Paste your text or code here..." required></textarea>
+          </div>
+
+          <div class="form-settings-grid">
+            <div class="form-group">
+              <label for="pasteTitle">Title / Description</label>
+              <input type="text" id="pasteTitle" class="text-input" placeholder="Untitled Paste..." autocomplete="off">
+            </div>
+
+            <div class="form-group">
+              <label for="pasteLanguage">Syntax Highlighting</label>
+              <select id="pasteLanguage" class="text-input select-input">
+                <option value="plaintext">Plain Text</option>
+                <option value="javascript">JavaScript</option>
+                <option value="typescript">TypeScript</option>
+                <option value="python">Python</option>
+                <option value="html">HTML</option>
+                <option value="css">CSS</option>
+                <option value="json">JSON</option>
+                <option value="markdown">Markdown</option>
+                <option value="rust">Rust</option>
+                <option value="go">Go</option>
+                <option value="cpp">C++</option>
+                <option value="sql">SQL</option>
+                <option value="bash">Bash / Shell</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pasteExpiration">Expiration</label>
+              <select id="pasteExpiration" class="text-input select-input">
+                <option value="never">Never</option>
+                <option value="10m">10 Minutes</option>
+                <option value="1h">1 Hour</option>
+                <option value="1d">1 Day</option>
+                <option value="1w">1 Week</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="pasteVisibility">Visibility</label>
+              <select id="pasteVisibility" class="text-input select-input">
+                <option value="public">Public (List in library)</option>
+                <option value="private">Private (Only via link)</option>
+              </select>
+            </div>
+
+            <!-- Custom Alias & Custom Pastecode Features -->
+            <div class="form-group">
+              <label for="pasteCustomAlias">Custom Alias (Optional)</label>
+              <input type="text" id="pasteCustomAlias" class="text-input" placeholder="e.g. my-cool-script" autocomplete="off">
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary btn-submit">
+              <span>Publish Paste</span>
+              <svg class="icon-arrow" width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- VIEW PASTE VIEW -->
+      <section id="pasteView" class="view-section">
+        <div class="paste-meta-card feature-card">
+          <div class="meta-header">
+            <div>
+              <div class="badge-row">
+                <span id="viewLanguageBadge" class="badge-pill">Plain Text</span>
+                <span id="viewVisibilityBadge" class="badge-pill">Public</span>
+                <span id="viewExpiryBadge" class="badge-coral">Expires: Never</span>
+                <span id="viewCodeBadge" class="badge-pill code-badge" title="Paste Code ID (Use to retrieve)">Code: FB-1029</span>
+              </div>
+              <h2 id="viewTitle" class="display-sm">Untitled Paste</h2>
+              <p class="paste-timestamp">Published <span id="viewCreatedTime">just now</span></p>
+            </div>
+
+            <div class="meta-actions">
+              <!-- Edit/Delete Actions for Owners -->
+              <span id="ownerActions" class="owner-actions-group">
+                <button id="editBtn" class="btn btn-secondary edit-action-btn">Edit</button>
+                <button id="deleteBtn" class="btn btn-secondary delete-action-btn">Delete</button>
+              </span>
+              <button id="toggleMarkdownBtn" class="btn btn-secondary md-preview-btn">Preview Markdown</button>
+              <button id="copyBtn" class="btn btn-secondary">Copy Code</button>
+              <button id="rawBtn" class="btn btn-secondary">Raw</button>
+              <button id="shareBtn" class="btn btn-secondary">Share Link</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Editable text input (Hidden by default, shown during editing) -->
+        <div id="editPane" class="edit-pane-wrapper">
+          <textarea id="editArea" class="paste-textarea edit-textarea"></textarea>
+          <div class="edit-pane-actions">
+            <button id="cancelEditBtn" class="btn btn-secondary">Cancel</button>
+            <button id="saveEditBtn" class="btn btn-primary">Save Changes</button>
+          </div>
+        </div>
+
+        <div class="code-window-card" id="codeWindowSection">
+          <div class="code-header">
+            <div class="window-controls">
+              <span class="dot close"></span>
+              <span class="dot minimize"></span>
+              <span class="dot expand"></span>
+            </div>
+            <span id="codeWindowLang" class="code-window-title">code_snippet.txt</span>
+            <div class="code-header-actions">
+              <span id="copyFeedback" class="copy-feedback-toast">Copied!</span>
+            </div>
+          </div>
+          <div class="code-body-wrapper">
+            <pre><code id="codeBlock" class="hljs plaintext"></code></pre>
+            <div id="markdownPreviewBlock" class="markdown-preview-block"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- LIST PASTES VIEW -->
+      <section id="listView" class="view-section">
+        <div class="hero-header">
+          <h1 class="display-lg">Library of Pastes</h1>
+          <p class="lead-text">Explore recently shared snippets. Stored in SQLite backend database.</p>
+        </div>
+
+        <!-- Live search library -->
+        <div class="search-library-bar">
+          <input type="text" id="librarySearchInput" class="text-input search-input" placeholder="Search pastes by title, content or language...">
+        </div>
+
+        <div class="pastes-grid" id="pastesList">
+          <!-- Dynamically filled -->
+        </div>
+      </section>
+
+      <!-- API DOCUMENTATION VIEW -->
+      <section id="docsView" class="view-section">
+        <div class="hero-header">
+          <h1 class="display-lg">Developer API Documentation</h1>
+          <p class="lead-text">Integrate FoxBin.dev directly into your CLI scripts, terminal tools, or IDE extensions using our REST API.</p>
+        </div>
+
+        <div class="docs-layout">
+          <!-- Create Paste Endpoint -->
+          <div class="docs-section-card feature-card">
+            <div class="docs-endpoint-title">
+              <span class="method post">POST</span>
+              <code>/api/pastes</code>
+            </div>
+            <p class="docs-endpoint-desc">Create a new snippet. Supports title, contents, language syntax settings, custom aliases, visibility limits, and auto-expiry.</p>
+            
+            <h4>Request Payload (JSON)</h4>
+            <div class="code-window-card docs-payload-card">
+              <pre><code class="hljs json">{
+  "id": "fb_unique_random_id",
+  "title": "My Python Web Scraper",
+  "content": "import urllib.request...",
+  "language": "python",
+  "visibility": "public",
+  "expiration": "1d",
+  "alias": "web-scraper",
+  "code": "FB-1234",
+  "createdAt": 1718963282000
+}</code></pre>
+            </div>
+
+            <h4>Example Response (201 Created)</h4>
+            <div class="code-window-card docs-payload-card">
+              <pre><code class="hljs json">{
+  "success": true,
+  "id": "fb_unique_random_id"
+}</code></pre>
+            </div>
+          </div>
+
+          <!-- Get Paste Endpoint -->
+          <div class="docs-section-card feature-card">
+            <div class="docs-endpoint-title">
+              <span class="method get">GET</span>
+              <code>/api/pastes/{id_or_alias_or_code}</code>
+            </div>
+            <p class="docs-endpoint-desc">Retrieve a paste by its UUID, custom alphanumeric alias, or short numeric retrieval code.</p>
+            
+            <h4>Example Response (200 OK)</h4>
+            <div class="code-window-card docs-payload-card">
+              <pre><code class="hljs json">{
+  "id": "fb_unique_random_id",
+  "alias": "web-scraper",
+  "code": "FB-1234",
+  "title": "My Python Web Scraper",
+  "content": "import urllib.request...",
+  "language": "python",
+  "visibility": "public",
+  "expiration": "1d",
+  "createdAt": 1718963282000
+}</code></pre>
+            </div>
+          </div>
+
+          <!-- Update Paste Endpoint -->
+          <div class="docs-section-card feature-card">
+            <div class="docs-endpoint-title">
+              <span class="method put">PUT</span>
+              <code>/api/pastes/{id}</code>
+            </div>
+            <p class="docs-endpoint-desc">Update the text contents of an existing paste. Requires the creator authorization (Frontend verifies local ownership mapping).</p>
+            
+            <h4>Request Payload (JSON)</h4>
+            <div class="code-window-card docs-payload-card">
+              <pre><code class="hljs json">{
+  "content": "updated code script...",
+  "createdAt": 1718964500000
+}</code></pre>
+            </div>
+          </div>
+
+          <!-- Delete Paste Endpoint -->
+          <div class="docs-section-card feature-card">
+            <div class="docs-endpoint-title">
+              <span class="method delete">DELETE</span>
+              <code>/api/pastes/{id}</code>
+            </div>
+            <p class="docs-endpoint-desc">Deletes a snippet from the database (restricted to admin authorizations or creator context).</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ADMIN / STATISTICS & AD PLACER VIEW -->
+      <section id="adminView" class="view-section">
+        <!-- ADMIN LOGIN BOX PANEL -->
+        <div id="adminLoginPanel" class="feature-card" style="max-width: 460px; margin: 40px auto; padding: var(--spacing-xl);">
+          <h2 class="display-sm" style="margin-bottom: var(--spacing-md); text-align: center;">Dashboard Access</h2>
+          <form id="adminLoginForm">
+            <div class="form-group" style="margin-bottom: var(--spacing-md);">
+              <label for="adminUsername">Username</label>
+              <input type="text" id="adminUsername" class="text-input" placeholder="admin" required autocomplete="username">
+            </div>
+            <div class="form-group" style="margin-bottom: var(--spacing-lg);">
+              <label for="adminPassword">Password</label>
+              <input type="password" id="adminPassword" class="text-input" placeholder="••••••••" required autocomplete="current-password">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; height: 44px;">Sign In</button>
+          </form>
+        </div>
+
+        <!-- ADMIN DASHBOARD PANEL (HIDDEN TILL SIGNED IN) -->
+        <div id="adminDashboardContent" style="display: none;">
+          <div class="hero-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+            <div>
+              <h1 class="display-lg">Admin Dashboard</h1>
+              <p class="lead-text">Track statistics, place ad integrations, and review system configuration.</p>
+            </div>
+            <button id="adminLogoutBtn" class="btn btn-secondary" style="height: 38px;">Sign Out</button>
+          </div>
+
+          <!-- Bento Grid Dashboard Stats -->
+          <div class="bento-grid">
+            <div class="bento-card stat-card">
+              <h3>Total Pastes</h3>
+              <div class="stat-number" id="statTotalPastes">0</div>
+              <span class="stat-desc">Ever created on FoxBin</span>
+            </div>
+            <div class="bento-card stat-card">
+              <h3>Public / Private</h3>
+              <div class="stat-number" id="statVisibilityRatio">0 / 0</div>
+              <span class="stat-desc">Public library vs Unlisted</span>
+            </div>
+            <div class="bento-card stat-card">
+              <h3>Total Database Size</h3>
+              <div class="stat-number" id="statTotalSize">0 KB</div>
+              <span class="stat-desc">SQLite db file footprint</span>
+            </div>
+            <div class="bento-card stat-card">
+              <h3>Top Syntax Languages</h3>
+              <div class="stat-languages-list" id="statLanguagesList">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- System Controls: Ad Placer & SEO Guides -->
+          <div class="admin-settings-section">
+            <div class="settings-card card-accent-coral">
+              <h2 class="display-sm">Ad Integration Config</h2>
+              <p class="card-desc">Paste your custom ad script code (HTML, Google AdSense script, banners, etc.) below. Leaving it blank hides the advertising containers completely.</p>
+              <textarea id="adPlacerTextarea" class="text-input textarea-input" placeholder="<!-- Paste script code here -->" style="font-family: var(--font-mono); height: 120px; resize: vertical;"></textarea>
+              <button id="saveAdBtn" class="btn btn-primary" style="margin-top: var(--spacing-md);">Save Ad Script</button>
+            </div>
+
+            <div class="settings-card">
+              <h2 class="display-sm">SEO Sharing & Metadata Guide</h2>
+              <p class="card-desc">FoxBin dynamically writes meta headers for search engine parsing and rich embeds (Discord, Slack, Twitter cards). Here is how sharing works:</p>
+              
+              <div class="seo-feature-list">
+                <div class="seo-feature-item">
+                  <span class="bullet-highlight">⚡ Dynamic Title Optimization</span>
+                  <p>When users view a paste, the title of the browser tab automatically re-writes to <code>[Paste Title] — FoxBin.dev</code> to trigger localized index matches.</p>
+                </div>
+                <div class="seo-feature-item">
+                  <span class="bullet-highlight">⚡ Contextual Descriptions</span>
+                  <p>The page meta description extracts a snippet of the code/text (up to 120 characters) automatically to create dynamic rich preview cards.</p>
+                </div>
+                <div class="seo-feature-item">
+                  <span class="bullet-highlight">⚡ Robot Expiration Directives</span>
+                  <p>Private/Unlisted pastes include canonical tags pointing back to the home view, keeping private codes un-indexed by Google spider-bots.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Recent activities -->
+          <div class="recent-pastes-table-wrapper feature-card">
+            <h2 class="display-sm" style="margin-bottom: var(--spacing-md)">Admin Feed: Recent Activities</h2>
+            <table class="admin-table">
+              <thead>
+                <tr>
+                  <th>Title</th>
+                  <th>Language</th>
+                  <th>Paste Code</th>
+                  <th>Visibility</th>
+                  <th>Expires</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="adminRecentPastesBody">
+                <!-- Dynamically populated -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast">Link copied to clipboard!</div>
+
+  <!-- Dynamic Ad Placer Bottom Banner -->
+  <div class="ad-banner-wrapper" id="bottomAdBanner" style="display: none;">
+    <!-- Managed by javascript -->
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <svg viewBox="0 0 100 100" width="40" height="40">
+          <polygon points="15,20 45,45 25,60" fill="#cc785c" />
+          <polygon points="85,20 55,45 75,60" fill="#cc785c" />
+          <polygon points="50,85 25,60 75,60" fill="#cc785c" />
+          <polygon points="50,85 45,78 55,78" fill="#faf9f5" />
+          <polygon points="50,60 40,40 50,30 60,40" fill="#faf9f5" />
+          <circle cx="38" cy="58" r="3.5" fill="#faf9f5" />
+          <circle cx="62" cy="58" r="3.5" fill="#faf9f5" />
+        </svg>
+        <div class="footer-title">FoxBin.dev</div>
+        <p class="footer-tagline">Warm, editorial code sharing.</p>
+      </div>
+      <div class="footer-links">
+        <div class="footer-col">
+          <h4>Platform</h4>
+          <a href="#/new">Create Paste</a>
+          <a href="#/pastes">Library</a>
+          <a href="#/docs">API Docs</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 FoxBin.dev. All rights reserved.</p>
+    </div>
+  </footer>
+
+  <!-- App Logic Javascript -->
+  <script src="app.js"></script>
+</body>
+</html>
