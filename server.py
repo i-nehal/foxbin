@@ -50,6 +50,15 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
         self.send_response(200)
         self.end_headers()
 
+    # Helper to send JSON response with proper Content-Length to prevent connection drop alerts
+    def send_json(self, data, status=200):
+        response_bytes = json.dumps(data).encode('utf-8')
+        self.send_response(status)
+        self.send_header('Content-Type', 'application/json')
+        self.send_header('Content-Length', str(len(response_bytes)))
+        self.end_headers()
+        self.wfile.write(response_bytes)
+
     def check_admin_auth(self):
         auth_header = self.headers.get('Authorization')
         if not auth_header:
@@ -71,19 +80,13 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             row = cursor.fetchone()
             ad_code = row[0] if row else ""
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'ad_code': ad_code}).encode())
+            self.send_json({'ad_code': ad_code})
             return
 
         # API: Get Statistics
         elif path_parts == ['api', 'stats']:
             if not self.check_admin_auth():
-                self.send_response(401)
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                self.send_json({'error': 'Unauthorized'}, 401)
                 return
                 
             conn = sqlite3.connect(DB_FILE)
@@ -104,24 +107,19 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
                 db_size_kb = round(os.path.getsize(DB_FILE) / 1024, 2)
                 
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({
+            self.send_json({
                 'total_pastes': total,
                 'public_pastes': public_count,
                 'private_pastes': total - public_count,
                 'db_size': f"{db_size_kb} KB",
                 'languages': langs
-            }).encode())
+            })
             return
 
         # API: List Public Pastes
         elif path_parts == ['api', 'pastes']:
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
-            # Returns all active public pastes (newest first)
             cursor.execute("SELECT id, alias, code, title, content, language, visibility, expiration, created_at FROM pastes WHERE visibility = 'public' ORDER BY created_at DESC")
             rows = cursor.fetchall()
             conn.close()
@@ -133,11 +131,7 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
                     'content': r[4], 'language': r[5], 'visibility': r[6],
                     'expiration': r[7], 'createdAt': r[8]
                 })
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps(pastes).encode())
+            self.send_json(pastes)
             return
 
         # API: Get Specific Paste
@@ -153,21 +147,16 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             conn.close()
             
             if r:
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({
+                self.send_json({
                     'id': r[0], 'alias': r[1], 'code': r[2], 'title': r[3],
                     'content': r[4], 'language': r[5], 'visibility': r[6],
                     'expiration': r[7], 'createdAt': r[8]
-                }).encode())
+                })
             else:
-                self.send_response(404)
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Not Found'}).encode())
+                self.send_json({'error': 'Not Found'}, 404)
             return
 
-        # Serve SPA static files (Fallback to index.html if not direct file)
+        # Serve SPA static files
         filename = parsed_url.path.lstrip('/')
         if not filename:
             filename = 'index.html'
@@ -175,7 +164,6 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
         if os.path.exists(filename) and os.path.isfile(filename):
             return super().do_GET()
         else:
-            # Fallback to index.html for SPA router
             self.path = '/index.html'
             return super().do_GET()
 
@@ -197,23 +185,15 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             password = body.get('password')
             
             if username == ADMIN_USER and password == ADMIN_PASS:
-                self.send_response(200)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'token': SESSION_TOKEN}).encode())
+                self.send_json({'token': SESSION_TOKEN})
             else:
-                self.send_response(401)
-                self.send_header('Content-Type', 'application/json')
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Invalid credentials'}).encode())
+                self.send_json({'error': 'Invalid credentials'}, 401)
             return
 
         # API: Save Ad Script
         elif path_parts == ['api', 'ad']:
             if not self.check_admin_auth():
-                self.send_response(401)
-                self.end_headers()
-                self.wfile.write(json.dumps({'error': 'Unauthorized'}).encode())
+                self.send_json({'error': 'Unauthorized'}, 401)
                 return
                 
             ad_code = body.get('ad_code', '')
@@ -222,11 +202,7 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             cursor.execute("INSERT OR REPLACE INTO config (key, value) VALUES ('ad_code', ?)", (ad_code,))
             conn.commit()
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True}).encode())
+            self.send_json({'success': True})
             return
 
         # API: Create Paste
@@ -248,10 +224,7 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
                 cursor.execute("SELECT id FROM pastes WHERE alias = ? OR id = ?", (alias, alias))
                 if cursor.fetchone():
                     conn.close()
-                    self.send_response(400)
-                    self.send_header('Content-Type', 'application/json')
-                    self.end_headers()
-                    self.wfile.write(json.dumps({'error': 'Alias is already taken'}).encode())
+                    self.send_json({'error': 'Alias is already taken'}, 400)
                     return
             
             cursor.execute(
@@ -260,11 +233,7 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             )
             conn.commit()
             conn.close()
-            
-            self.send_response(201)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True, 'id': pid}).encode())
+            self.send_json({'success': True, 'id': pid}, 201)
             return
 
     def do_PUT(self):
@@ -274,10 +243,8 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
         # API: Update Paste
         if len(path_parts) == 3 and path_parts[0:2] == ['api', 'pastes']:
             pid = path_parts[2]
-            
             content_length = int(self.headers.get('Content-Length', 0))
             body = json.loads(self.rfile.read(content_length).decode('utf-8'))
-            
             content = body.get('content')
             
             conn = sqlite3.connect(DB_FILE)
@@ -285,11 +252,7 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
             cursor.execute("UPDATE pastes SET content = ?, created_at = ? WHERE id = ?", (content, int(body.get('createdAt', 0)), pid))
             conn.commit()
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True}).encode())
+            self.send_json({'success': True})
             return
 
     def do_DELETE(self):
@@ -299,25 +262,17 @@ class APIRoutingHandler(http.server.SimpleHTTPRequestHandler):
         # API: Delete Paste
         if len(path_parts) == 3 and path_parts[0:2] == ['api', 'pastes']:
             pid = path_parts[2]
-            is_admin = self.check_admin_auth()
-            
             conn = sqlite3.connect(DB_FILE)
             cursor = conn.cursor()
             cursor.execute("DELETE FROM pastes WHERE id = ?", (pid,))
             conn.commit()
             conn.close()
-            
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.end_headers()
-            self.wfile.write(json.dumps({'success': True}).encode())
+            self.send_json({'success': True})
             return
 
 if __name__ == '__main__':
     init_db()
-    # Read port from Render's environment variable, default to 8080 for local dev
     port = int(os.environ.get('PORT', 8080))
-    # Bind to 0.0.0.0 (all interfaces) so Render's load balancer can route traffic to it
     server_address = ('0.0.0.0', port)
     httpd = http.server.HTTPServer(server_address, APIRoutingHandler)
     print(f"Serving FoxBin API and frontend on port {port}...")
